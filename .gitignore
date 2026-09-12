@@ -394,3 +394,5 @@ Temporary Items
 .apdisk
 
 # End of https://www.toptal.com/developers/gitignore/api/node,reactnative,react,extjs,nextjs
+/.ai
+

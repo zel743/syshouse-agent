@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,25 +12,35 @@ import {
   View,
 } from 'react-native';
 import type { RootStackParamList } from '../App';
+import { login } from '../services/api';
+import { saveSession } from '../services/session';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
-
-const DEMO_USERNAME = 'banorte';
-const DEMO_PASSWORD = '123456';
 
 export default function HomeScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (username.trim() === DEMO_USERNAME && password === DEMO_PASSWORD) {
-      setError('');
-      navigation.replace('EducacionFinancieraMenu');
+  const handleLogin = async () => {
+    if (!username.trim() || !password) {
+      setError('Escribe tu usuario y contraseña.');
       return;
     }
 
-    setError('El usuario o la contraseña no son correctos.');
+    setError('');
+    setLoading(true);
+
+    try {
+      const session = await login(username.trim(), password);
+      await saveSession(session);
+      navigation.replace('EducacionFinancieraMenu', { usuario: session });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,11 +98,16 @@ export default function HomeScreen({ navigation }: Props) {
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>Entrar</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Entrar</Text>
+            )}
           </Pressable>
 
-          <Text style={styles.demoText}>Demo: banorte / 123456</Text>
+          <Text style={styles.demoText}>Demo: Luis / banorte2026</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
