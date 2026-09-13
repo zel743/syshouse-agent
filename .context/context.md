@@ -559,7 +559,7 @@ cumple.
 
 ## 10. Deploy a Railway + Vercel, y cambio de LLM: Claude → DeepSeek
 
-### 10.1 Deploy a Railway — dos bugs de configuración reales
+### 10.1 Deploy a Railway — bugs reales encontrados (no solo config)
 
 Se desplegó `backend/`+`mcp/` como un solo servicio de Railway (root del
 repo, `railway.json`, ver conversación anterior para el detalle completo
@@ -585,6 +585,44 @@ Verificado con `curl` real contra la URL pública de Railway: `/health` 200,
 login de Luis devuelve token real, y un cliente WebSocket real contra
 `wss://.../ws` confirmó que el loop `backend → mcp/ → Azure Postgres`
 también funciona en producción (no solo local).
+
+**3. `systemPrompt.md` no llegaba a `dist/` (bug real de build, no de
+Railway).** Al conectar `deepseekAgente.ts` y redeployar, el contenedor
+crasheaba en el arranque con
+`ENOENT: no such file or directory, open '/app/backend/dist/agent/systemPrompt.md'`.
+Causa: `tsc` solo compila archivos `.ts` — nunca copia archivos sueltos
+como `.md` a `dist/`. Funcionaba en local porque el modo dev
+(`ts-node-dev`) corre directo contra `src/`, donde el `.md` sí vive.
+Arreglado agregando un paso al `build` de `backend/package.json`:
+`tsc && node -e "require('fs').copyFileSync('src/agent/systemPrompt.md','dist/agent/systemPrompt.md')"`
+— portable (no depende de `cp` de shell), verificado localmente que
+`dist/agent/systemPrompt.md` aparece después de `npm run build`.
+
+**4. `ReferenceError: crypto is not defined` en Node 18 (bug real de
+compatibilidad, encontrado ya con el fix anterior desplegado).** El
+contenedor de Railway corre **Node 18.20.5** por default; el SDK de MCP
+(`@modelcontextprotocol/sdk`, usado tanto por `mcp/` como por el cliente
+en `backend/`) usa el `crypto` global del Web Crypto API, disponible por
+default solo desde **Node 20**. En local nunca apareció porque la máquina
+de desarrollo ya tiene Node 24. Arreglado con dos capas: `"engines":
+{"node": ">=20"}` agregado a los 3 `package.json` (raíz, `backend/`,
+`mcp/`) para que Nixpacks aprovisione Node 20+, y un polyfill defensivo al
+inicio de `mcp/src/index.ts` y `backend/src/index.ts`
+(`if (typeof globalThis.crypto === 'undefined') globalThis.crypto =
+require('crypto').webcrypto`) como red de seguridad si algún build cacheado
+igual usara Node 18. Verificado de nuevo con la simulación local completa
+(build + start con las variables exactas de Railway) — el loop completo
+`DeepSeek → mcp/ → Azure Postgres → render_ui` sigue funcionando después
+del fix.
+
+**Nota para la próxima vez que algo falle solo en Railway y no en local:**
+los primeros dos bugs de esta sección (rutas de host, puerto público) y
+estos dos últimos (build incompleto, versión de Node) comparten un patrón
+— algo que el entorno de desarrollo local oculta porque es más permisivo
+(Node más nuevo, correr contra `src/` en vez de `dist/`, un solo dev
+corriendo en su propia red). Cuando algo funciona en local y falla solo en
+Railway, sospechar primero de esas diferencias de entorno antes que del
+código en sí.
 
 ### 10.2 Cambio de proveedor de LLM: Claude → DeepSeek
 

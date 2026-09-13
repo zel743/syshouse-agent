@@ -1,3 +1,10 @@
+// Polyfill defensivo: el SDK de MCP (cliente) y `openai` usan el Web Crypto
+// global, disponible por default solo desde Node 20+. `engines.node` ya
+// pide >=20, esto es solo una red de seguridad adicional.
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as any).crypto = require('crypto').webcrypto;
+}
+
 import http from 'http';
 import express from 'express';
 import cors from 'cors';

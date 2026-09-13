@@ -1,3 +1,11 @@
+// Polyfill defensivo: @modelcontextprotocol/sdk usa el Web Crypto global
+// (`crypto.randomUUID()`, etc.), disponible por default solo desde Node 20+.
+// `engines.node` en package.json ya pide >=20, pero esto evita un crash
+// silencioso si algún entorno (cache de build, etc.) igual usa Node 18.
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as any).crypto = require('crypto').webcrypto;
+}
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
