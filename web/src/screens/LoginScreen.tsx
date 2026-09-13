@@ -88,7 +88,15 @@ export function LoginScreen({ onLogin }: Props) {
           {loading ? 'Entrando…' : 'Entrar'}
         </button>
 
-        <p className="login-demo">Demo: Luis / banorte2026</p>
+        <div className="login-demo">
+          <p className="login-demo-titulo">Usuarios de prueba (contraseña: banorte2026)</p>
+          <ul className="login-demo-lista">
+            <li>Luis — Novato</li>
+            <li>Ana — Deudor</li>
+            <li>Carlos — Inversor</li>
+            <li>Marta — Ahorrativo</li>
+          </ul>
+        </div>
       </form>
 
       <DecorativeWave />
