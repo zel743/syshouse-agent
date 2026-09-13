@@ -17,6 +17,10 @@ const claveTap = (accion: string, parametros?: Record<string, unknown>) =>
 export function useAgentSession(authUid: string | null) {
   const [stack, setStack] = useState<Pantalla[]>([]);
   const [conectado, setConectado] = useState(false);
+  // true solo mientras hay una ida y vuelta real al servidor en curso (init
+  // o un tap que no estaba en caché) — un tap servido desde caché nunca la
+  // prende, porque no espera nada.
+  const [cargando, setCargando] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const cacheRef = useRef<Map<string, Pantalla>>(new Map());
   const pendienteRef = useRef<string | null>(null);
@@ -26,6 +30,7 @@ export function useAgentSession(authUid: string | null) {
     setStack([]);
     cacheRef.current.clear();
     pendienteRef.current = null;
+    setCargando(false);
 
     if (!authUid) return;
 
@@ -35,19 +40,31 @@ export function useAgentSession(authUid: string | null) {
     ws.onopen = () => {
       setConectado(true);
       pendienteRef.current = '__init__';
+      setCargando(true);
       ws.send(JSON.stringify({ type: 'init', auth_uid: authUid }));
     };
 
     ws.onmessage = (event) => {
       const data: ServerEvent = JSON.parse(event.data);
-      if (data.type !== 'pantalla') return;
 
-      const parsed = safeParsePantalla(data.pantalla);
-      if (pendienteRef.current) {
-        cacheRef.current.set(pendienteRef.current, parsed);
-        pendienteRef.current = null;
+      if (data.type === 'pantalla') {
+        const parsed = safeParsePantalla(data.pantalla);
+        if (pendienteRef.current) {
+          cacheRef.current.set(pendienteRef.current, parsed);
+          pendienteRef.current = null;
+        }
+        setCargando(false);
+        setStack((prev) => [...prev, parsed]);
+        return;
       }
-      setStack((prev) => [...prev, parsed]);
+
+      if (data.type === 'error') {
+        // El servidor no manda `pantalla` en este caso — sin esto el
+        // spinner se quedaría girando para siempre. Se conserva la
+        // pantalla anterior tal cual (mejor eso que romper la vista).
+        pendienteRef.current = null;
+        setCargando(false);
+      }
     };
 
     ws.onclose = () => setConectado(false);
@@ -64,13 +81,14 @@ export function useAgentSession(authUid: string | null) {
     const cacheada = cacheRef.current.get(clave);
 
     // Ya se generó esta misma pantalla antes (mismo tap) — se reutiliza
-    // tal cual, sin mandar nada por WebSocket.
+    // tal cual, sin mandar nada por WebSocket ni mostrar loading.
     if (cacheada) {
       setStack((prev) => [...prev, cacheada]);
       return;
     }
 
     pendienteRef.current = clave;
+    setCargando(true);
     wsRef.current?.send(
       JSON.stringify({
         type: 'tap',
@@ -87,5 +105,5 @@ export function useAgentSession(authUid: string | null) {
     setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   };
 
-  return { pantalla, conectado, sendAction, goBack, atRoot };
+  return { pantalla, conectado, cargando, sendAction, goBack, atRoot };
 }
