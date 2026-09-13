@@ -1,0 +1,54 @@
+.top-app-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  background: var(--brand-red);
+}
+
+.top-app-bar-back {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-white);
+  color: var(--brand-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.top-app-bar-back:active {
+  background: var(--brand-red-soft);
+}
+
+.top-app-bar-spacer {
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.top-app-bar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--brand-white);
+}
+
+.top-app-bar-logo {
+  width: 36px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.top-app-bar-logo-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: block;
+}

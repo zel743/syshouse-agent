@@ -1,0 +1,54 @@
+/* Tokens de .context/sistema-diseno-app-bancaria (2).md, sección 7 */
+:root {
+  /* Marca */
+  --brand-red: #e22c2c;
+  --brand-red-dark: #b81f1f;
+  --brand-red-soft: #fbe6e6;
+  --brand-white: #ffffff;
+
+  /* Neutros */
+  --bg: #f7f7f9;
+  --border: #e8e8ec;
+  --text-primary: #1c1c1e;
+  --text-secondary: #6b7280;
+
+  /* Datos / semántica */
+  --data-positive-green: #1e9e6d;
+  --data-olive-green: #4c7a2e;
+  --data-amber-mid: #c99a00;
+  --data-blue: #4c6ff0;
+  --data-purple: #8b6ff0;
+  --data-cyan: #17b3c9;
+  --data-orange: #f2892e;
+  --data-magenta: #d63a8c;
+  --data-indigo: #4b2e83;
+  --data-alert-red: #d64545;
+
+  /* Tipografía */
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Radio / sombra / espaciado */
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 3px rgba(20, 20, 30, 0.06);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+/* Paleta cíclica para series/categorías de datos sin semántica fija
+   (ver regla 5: cada categoría debe mantener el mismo color en toda la
+   app; el agente reutiliza los mismos nombres de categoría). */
+.a2ui-data-color-0 { --data-color: var(--data-blue); }
+.a2ui-data-color-1 { --data-color: var(--data-purple); }
+.a2ui-data-color-2 { --data-color: var(--data-cyan); }
+.a2ui-data-color-3 { --data-color: var(--data-orange); }
+.a2ui-data-color-4 { --data-color: var(--data-magenta); }
+.a2ui-data-color-5 { --data-color: var(--data-indigo); }
+.a2ui-data-color-6 { --data-color: var(--data-olive-green); }
+.a2ui-data-color-7 { --data-color: var(--data-amber-mid); }

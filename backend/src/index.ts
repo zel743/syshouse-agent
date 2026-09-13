@@ -1,8 +1,10 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import educationRoutes from './routes/education';
 import authRoutes from './routes/auth';
+import { setupWebSocket } from './agent/ws';
 
 dotenv.config();
 
@@ -10,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares
-app.use(cors()); // Permite peticiones desde tu app Expo
+app.use(cors()); // Permite peticiones desde el frontend web
 app.use(express.json()); // Permite parsear JSON en el body de las peticiones
 
 // Rutas
@@ -22,6 +24,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'API funcionando correctamente' });
 });
 
-app.listen(port, () => {
-  console.log(`Servidor Backend corriendo en http://localhost:${port}`);
+// El WebSocket (/ws) comparte el mismo servidor HTTP que Express, en vez
+// de levantar un puerto aparte.
+const server = http.createServer(app);
+setupWebSocket(server);
+
+server.listen(port, () => {
+  console.log(`Servidor Backend corriendo en http://localhost:${port} (WS en /ws)`);
 });

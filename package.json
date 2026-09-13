@@ -1,0 +1,12 @@
+{
+  "name": "syshouse-agent-deploy",
+  "private": true,
+  "description": "Orquesta backend/ y mcp/ como un solo servicio de Railway (se hablan por localhost interno; mcp/ nunca se expone públicamente).",
+  "scripts": {
+    "build": "npm install --prefix mcp && npm run build --prefix mcp && npm install --prefix backend && npm run build --prefix backend",
+    "start": "concurrently -k -n mcp,backend -c blue,green \"node mcp/dist/index.js\" \"node backend/dist/index.js\""
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

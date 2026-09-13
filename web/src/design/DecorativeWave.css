@@ -1,0 +1,11 @@
+.decorative-wave {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 11vh;
+  min-height: 70px;
+  pointer-events: none;
+  z-index: 0;
+}

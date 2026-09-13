@@ -1,0 +1,124 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--brand-red);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-white);
+  color: var(--brand-red);
+  margin-bottom: var(--space-3);
+}
+
+.login-title {
+  font-family: var(--font-heading);
+  color: var(--brand-white);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.login-subtitle {
+  color: var(--brand-red-soft);
+  font-size: 14px;
+  margin: var(--space-2) 0 0;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  padding: var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--brand-white);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 var(--space-4);
+}
+
+.login-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+
+.login-input {
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  padding: 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: var(--font-body);
+  margin-bottom: var(--space-4);
+  background: var(--bg);
+}
+
+.login-input:focus {
+  outline: 2px solid var(--brand-red);
+}
+
+.login-error {
+  color: var(--data-alert-red);
+  font-size: 13px;
+  margin: -8px 0 var(--space-3);
+}
+
+.login-button {
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--brand-red);
+  color: var(--brand-white);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.login-button:not(:disabled):active {
+  background: var(--brand-red-dark);
+}
+
+.login-demo {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+  margin: var(--space-3) 0 0;
+}
