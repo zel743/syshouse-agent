@@ -614,15 +614,15 @@ conversación). Cambio ejecutado:
   de Claude — el contenido del prompt en sí (catálogo de componentes,
   reglas, few-shot) no cambió, es agnóstico al proveedor.
 
-**Estado al cierre de esta sesión:** el código de `deepseekAgente.ts`
-compila limpio (`tsc`) y el JSON Schema que genera para la tool `render_ui`
-(`z.toJSONSchema(PantallaSchema)`) se verificó manualmente que tiene la
-forma correcta. **Todavía no se probó contra una key real de DeepSeek** —
-el usuario no la había generado al cierre de la conversación. Cuando la
-tenga, debe ponerla en `backend/.env` (`DEEPSEEK_API_KEY=...`, nunca
-pegarla en el chat) y probar contra los 4 usuarios demo con el mismo
-cliente de WebSocket de prueba que se usó para `mockAgente.ts` — si
-`deepseekAgente.ts` no cumple el contrato `Pantalla` a la primera, revisar
-si el modelo está llamando `render_ui` como tool o respondiendo en texto
-plano (`finish_reason` distinto de `tool_calls` se loggea con un
-`console.warn` en el propio código).
+**Verificado en vivo contra los 4 usuarios demo** (cliente WebSocket real,
+no solo tsc): `deepseekAgente.ts` funciona correctamente end-to-end
+(DeepSeek → tools de `mcp/` → Azure Postgres → `render_ui` validado por
+Zod → WS). Luis (Novato) respeta la regla de "sin historial" (sin
+kpi/chart forzado); Ana/Carlos generan pantallas ricas y coherentes,
+con texto genuinamente personalizado y hasta `accion` nuevas inventadas
+por el modelo (ej. `ver_detalle_deuda`, `ver_plan_deuda`) que
+`mockAgente.ts` nunca tuvo — prueba de que el LLM real está componiendo,
+no repitiendo una plantilla. `DEEPSEEK_API_KEY` sigue solo en
+`backend/.env` local — todavía falta agregarla a las variables de Railway
+para que el agente real también funcione en producción (hoy Railway sigue
+cayendo a `mockAgente.ts` porque no tiene esa variable).
