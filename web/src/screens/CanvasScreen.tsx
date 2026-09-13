@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function CanvasScreen({ usuario, onBack }: Props) {
-  const { pantalla, log, conectado, sendAction } = useAgentSession(usuario.auth_uid);
+  const { pantalla, conectado, sendAction } = useAgentSession(usuario.auth_uid);
 
   return (
     <div className="canvas-page">
@@ -19,17 +19,6 @@ export function CanvasScreen({ usuario, onBack }: Props) {
 
       <div className="canvas-body">
         {!conectado && <p className="canvas-status">Conectando con el agente…</p>}
-
-        {log.length > 0 && (
-          <details className="canvas-log" open>
-            <summary>Qué está haciendo el agente</summary>
-            <ul>
-              {log.map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ul>
-          </details>
-        )}
 
         {pantalla ? (
           <Renderer pantalla={pantalla} onAction={sendAction} />
