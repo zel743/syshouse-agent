@@ -9,9 +9,11 @@ import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import educationRoutes from './routes/education';
 import authRoutes from './routes/auth';
 import { setupWebSocket } from './agent/ws';
+import { openapiSpec } from './openapi';
 
 dotenv.config();
 
@@ -25,6 +27,10 @@ app.use(express.json()); // Permite parsear JSON en el body de las peticiones
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/education', educationRoutes);
+
+// Documentación interactiva del REST (no cubre el WebSocket /ws ni las
+// tools de MCP — ver .context/documentacion-tecnica.md para esas).
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 // Ruta de prueba de estado
 app.get('/health', (req, res) => {
