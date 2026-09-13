@@ -162,24 +162,24 @@ Al iniciar la sesión, el repo tenía:
 
 ## 6. Pendientes / próximos pasos sugeridos
 
-- [ ] Decidir mensaje de commit y confirmar el `git add -A` ya hecho (o
-      ajustarlo) antes de comitear — ahora también incluye todo `web/`,
-      `backend/src/agent/`, las tools nuevas de `mcp/`, y el fix de deploy
-      de Railway.
-- [ ] Conseguir la API key de Anthropic y escribir `claudeAgente.ts`
-      (mismo tipo `Agente` que `mockAgente.ts`, mismo contrato `Pantalla`)
-      usando `backend/src/agent/systemPrompt.md` como system prompt.
-      Cuando esté, `ws.ts` solo cambia qué función de agente invoca.
-- [ ] Decidir si el "modo desarrollo local" con Ollama se implementa como
-      un segundo `Agente` intercambiable o como el mismo `claudeAgente.ts`
-      apuntando a un endpoint compatible.
-- [ ] Ejecutar el deployment real: `web/` a Vercel, `backend/`+`mcp/` a
-      Railway (como un solo servicio, ver notas de `railway.json` y
-      `MCP_PORT` en el repo) — checklist de variables de entorno ya armado
-      en la conversación.
+- [x] Deployment real: `backend/`+`mcp/` en Railway (un solo servicio,
+      `railway.json` + `MCP_PORT`) y verificado — login y el loop del
+      agente contra Azure Postgres funcionan en producción. `web/` en
+      Vercel apuntando a la URL de Railway. Ver sección 10 para el detalle
+      de dos bugs de configuración encontrados y corregidos en Railway.
+- [ ] Decidir mensaje de commit y confirmar el `git add -A` (o ajustarlo)
+      antes de comitear — ahora también incluye `web/`,
+      `backend/src/agent/` (incluyendo `deepseekAgente.ts`), las tools
+      nuevas de `mcp/`, y el fix de deploy de Railway.
+- [x] Conectar el LLM real — **cambio de proveedor**: ya no es Claude, es
+      **DeepSeek** (API compatible con OpenAI), por decisión del usuario
+      ("por motivos de arquitectura"). `backend/src/agent/deepseekAgente.ts`
+      ya implementa el loop de tool-calling; falta la API key de DeepSeek
+      para probarlo en vivo (ver sección 10).
 - [ ] Antes de la demo: abrir temporalmente el firewall de Azure Postgres a
       `0.0.0.0/0` (decisión ya cerrada, ver
-      `.context/contexto-para-claude-code.md`), y cerrarlo después.
+      `.context/contexto-para-claude-code.md`), y cerrarlo después de
+      probar todo.
 - [ ] Verificación visual en navegador real del flujo completo
       login → menú → canvas → tap con el nuevo sistema de diseño (esta
       sesión solo pudo verificar por `tsc`, `vitest` y clientes de
@@ -556,3 +556,73 @@ la sección 12 se reemplazaron por salidas reales verificadas de
 `mockAgente.ts` contra los 4 usuarios demo (no inventadas), para que el
 documento sea a la vez la especificación y una prueba de que el mock ya la
 cumple.
+
+## 10. Deploy a Railway + Vercel, y cambio de LLM: Claude → DeepSeek
+
+### 10.1 Deploy a Railway — dos bugs de configuración reales
+
+Se desplegó `backend/`+`mcp/` como un solo servicio de Railway (root del
+repo, `railway.json`, ver conversación anterior para el detalle completo
+de esa preparación). Al probarlo en vivo aparecieron dos problemas, ambos
+de **configuración en el dashboard de Railway, no del código**:
+
+1. **"Generate Domain" pidió elegir entre el puerto 8000 y el 8080.**
+   Railway detectó los dos procesos escuchando en el mismo contenedor.
+   8000 es `mcp/` (fijo vía `MCP_PORT`, a propósito interno, nunca debe
+   exponerse); 8080 era el `PORT` dinámico que Railway le asignó a
+   `backend/` esa vez. Se confirmó el número correcto leyendo el log de
+   arranque (`Servidor Backend corriendo en http://localhost:<PORT>`) en
+   vez de adivinar, y se expuso ese puerto.
+2. **Login devolvía 500 en producción.** El log de Railway mostró
+   `getaddrinfo ENOTFOUND http://banrt.postgres.database.azure.com/` — la
+   variable `DB_HOST` en Railway se había cargado con un `http://` y `/`
+   de más (mismo tipo de error que el bug original de `jdbc:postgresql://`
+   en el `.env` local, sección 3 de este documento, pero esta vez en el
+   dashboard de Railway). Se corrigió a solo `banrt.postgres.database.azure.com`
+   y el login empezó a funcionar contra Azure real en producción.
+
+Verificado con `curl` real contra la URL pública de Railway: `/health` 200,
+login de Luis devuelve token real, y un cliente WebSocket real contra
+`wss://.../ws` confirmó que el loop `backend → mcp/ → Azure Postgres`
+también funciona en producción (no solo local).
+
+### 10.2 Cambio de proveedor de LLM: Claude → DeepSeek
+
+Hasta este punto de la conversación, el plan (incluyendo
+`.context/contexto-para-claude-code.md`, sección 3) era usar **Claude**
+como LLM de producción. El usuario pidió cambiarlo a **DeepSeek** "por
+motivos de arquitectura" (razón dada tal cual, sin más detalle en la
+conversación). Cambio ejecutado:
+
+- Se quitó `@anthropic-ai/sdk` de `backend/` y se instaló `openai` — la
+  API de DeepSeek es **compatible con la API de OpenAI** (Chat Completions
+  + function calling), así que no hace falta un SDK propio de DeepSeek,
+  solo apuntar el cliente de `openai` a `baseURL: 'https://api.deepseek.com'`.
+- `backend/src/agent/claudeAgente.ts` (que se había escrito y probado por
+  tipos, pero nunca contra una key real) se **reemplazó** por
+  `backend/src/agent/deepseekAgente.ts` — mismo contrato `Agente`, mismo
+  loop de tool-calling manual (llama tools de `mcp/` hasta que el modelo
+  invoca `render_ui`), pero con el formato de mensajes/tools de OpenAI
+  (`tool_calls` con `role: 'tool'` para los resultados) en vez del formato
+  de bloques de contenido de Anthropic.
+- `ws.ts` ahora elige el agente según `DEEPSEEK_API_KEY` (antes era
+  `ANTHROPIC_API_KEY`) — si no está configurada, sigue cayendo a
+  `mockAgente.ts` automáticamente, sin romper nada.
+- `backend/.env` / `.env.example`: `ANTHROPIC_API_KEY`/`OLLAMA_HOST` →
+  `DEEPSEEK_API_KEY`/`DEEPSEEK_MODEL` (default `deepseek-chat`).
+- `systemPrompt.md` actualizado para mencionar `deepseekAgente.ts` en vez
+  de Claude — el contenido del prompt en sí (catálogo de componentes,
+  reglas, few-shot) no cambió, es agnóstico al proveedor.
+
+**Estado al cierre de esta sesión:** el código de `deepseekAgente.ts`
+compila limpio (`tsc`) y el JSON Schema que genera para la tool `render_ui`
+(`z.toJSONSchema(PantallaSchema)`) se verificó manualmente que tiene la
+forma correcta. **Todavía no se probó contra una key real de DeepSeek** —
+el usuario no la había generado al cierre de la conversación. Cuando la
+tenga, debe ponerla en `backend/.env` (`DEEPSEEK_API_KEY=...`, nunca
+pegarla en el chat) y probar contra los 4 usuarios demo con el mismo
+cliente de WebSocket de prueba que se usó para `mockAgente.ts` — si
+`deepseekAgente.ts` no cumple el contrato `Pantalla` a la primera, revisar
+si el modelo está llamando `render_ui` como tool o respondiendo en texto
+plano (`finish_reason` distinto de `tool_calls` se loggea con un
+`console.warn` en el propio código).

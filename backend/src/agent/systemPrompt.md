@@ -6,8 +6,9 @@
 > con los nombres de tool y parámetros ya alineados al esquema real de
 > Azure Postgres y a las tools reales de `mcp/` (ver sección 9).
 > `backend/src/agent/mockAgente.ts` implementa hoy estas mismas reglas sin
-> LLM — este documento es el contrato que debe seguir cumpliendo cuando se
-> conecte Claude.
+> LLM; `backend/src/agent/deepseekAgente.ts` es el loop real contra la API
+> de DeepSeek (compatible con OpenAI) — este documento es el contrato que
+> ambos deben cumplir por igual.
 
 ---
 
@@ -626,10 +627,12 @@ Nota que aquí **no se inventa una causa** para nada — todo viene directo de
 
 Este documento ya refleja el esquema real de Azure Postgres y las tools
 reales de `mcp/` (a diferencia de la v1, que tenía tools "propuestas" con
-nombres provisionales). Pendiente real:
+nombres provisionales). Ya conectado a un LLM real:
+`backend/src/agent/deepseekAgente.ts` implementa el loop de tool-calling
+contra la API de DeepSeek (compatible con OpenAI) usando este mismo
+documento como system prompt; `mockAgente.ts` sigue disponible como
+fallback por reglas cuando no hay `DEEPSEEK_API_KEY` configurada. Pendiente
+real:
 
-- Conectar este system prompt a una llamada real de Claude
-  (`backend/src/agent/claudeAgente.ts`, todavía no existe — hoy
-  `mockAgente.ts` implementa estas mismas reglas a mano).
 - Sumar más ejemplos few-shot conforme se descubran casos límite al probar
   con Claude real.

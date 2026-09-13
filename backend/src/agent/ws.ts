@@ -1,8 +1,19 @@
 import type { Server } from 'http';
 import { WebSocket, WebSocketServer } from 'ws';
+import type { Agente } from './agente';
 import type { ClientEvent, ServerEvent } from './protocol';
 import { mockAgente } from './mockAgente';
+import { deepseekAgente } from './deepseekAgente';
 import { PantallaSchema } from './schema';
+
+// Si hay API key de DeepSeek, se usa el agente real; si no, el mock por
+// reglas sigue funcionando exactamente igual (mismo contrato `Agente`).
+const agente: Agente = process.env.DEEPSEEK_API_KEY ? deepseekAgente : mockAgente;
+if (process.env.DEEPSEEK_API_KEY) {
+  console.log('[agente] Usando deepseekAgente (DeepSeek)');
+} else {
+  console.log('[agente] DEEPSEEK_API_KEY no configurada — usando mockAgente');
+}
 
 const FALLBACK_PANTALLA = {
   pantalla_id: 'error',
@@ -40,7 +51,7 @@ export function setupWebSocket(server: Server) {
       }
 
       try {
-        const pantallaCruda = await mockAgente(
+        const pantallaCruda = await agente(
           evento.type === 'tap'
             ? {
                 auth_uid: evento.auth_uid,
