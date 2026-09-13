@@ -61,17 +61,19 @@ syshouse-agent/
 ├── web/          Frontend activo — React + Vite + TypeScript
 ├── backend/      Orquestador — Node.js + Express + TypeScript
 ├── mcp/          Servidor de datos — Node.js + Express + MCP SDK
-├── app-mobil/    Frontend anterior (Expo/React Native) — congelado, sin uso
 ├── package.json  Orquesta backend/+mcp/ como un solo servicio (deploy)
 └── railway.json  Configuración de build/deploy para Railway
 ```
 
-`app-mobil/` fue el prototipo inicial (app móvil). El proyecto pivoteó a
-**web puro** porque lo que se evalúa es la capacidad del agente de generar
-UI dinámicamente, no la app como producto — una web sin las
-particularidades de React Native (builds nativos, stores, etc.) permite
-invertir el tiempo disponible en la pieza que sí se evalúa: el renderer y el
-agente.
+El prototipo inicial era una app móvil (Expo/React Native, carpeta
+`app-mobil/`). El proyecto pivoteó a **web puro** porque lo que se evalúa
+es la capacidad del agente de generar UI dinámicamente, no la app como
+producto — una web sin las particularidades de React Native (builds
+nativos, stores, etc.) permite invertir el tiempo disponible en la pieza
+que sí se evalúa: el renderer y el agente. `app-mobil/` se mantuvo
+congelada un tiempo como referencia y finalmente se **eliminó del
+repositorio** una vez confirmado que nada en `web/`, `backend/` ni `mcp/`
+dependía de ella.
 
 ---
 
@@ -118,6 +120,10 @@ agente.
 ---
 
 ## 4. Base de datos (Azure PostgreSQL)
+
+> Documento complementario con el detalle completo (queries `CREATE
+> TABLE`/`INSERT` consolidadas, listas para recrear la base desde cero, y
+> el razonamiento detrás de cada tabla): `.context/documentacion-dataset.md`.
 
 ### 4.1 Tablas
 
@@ -418,6 +424,12 @@ por sesión:
 - La conexión WebSocket y este estado viven a nivel de la aplicación (no de
   la pantalla del canvas), así que salir al menú y volver a entrar no
   reconecta ni regenera nada.
+- Mientras hay una ida y vuelta real en curso (init, o un tap que no
+  estaba en caché) se muestra un indicador de carga — de página completa
+  si todavía no hay ninguna pantalla, o como superposición sobre la
+  pantalla anterior si ya había una — para dejar claro que el servidor
+  está trabajando y la app no se congeló. Un tap servido desde caché nunca
+  lo activa, porque no espera nada.
 
 ---
 
@@ -531,6 +543,7 @@ Servidor MCP con las 10 tools de la sección 5.3. Solo la consume `backend/`, nu
 | `backend/`+`mcp/` en un solo servicio de Railway | Dos servicios separados con red privada | Evita depender de que el tier gratuito de Railway garantice IP de salida fija o resolución de red privada entre servicios |
 | Validación tolerante en el frontend (por bloque) | Rechazar toda la pantalla si algo no valida | Un campo mal formado no debe romper la demo en vivo frente al jurado |
 | Web puro (React) en vez de Expo/React Native | Continuar con la app móvil | Lo que se evalúa es el agente generando UI, no la app como producto — la web quita complejidad de despliegue/build nativo que no aporta al criterio de evaluación |
+| Eliminar `app-mobil/` del repo (no solo congelarla) | Dejarla como referencia histórica indefinidamente | Una vez verificado que nada en `web/`/`backend/`/`mcp/` la importaba, mantenerla solo agregaba ruido al repositorio |
 
 ---
 
