@@ -94,7 +94,6 @@ export function LoginScreen({ onLogin }: Props) {
             <li>Luis — Novato</li>
             <li>Ana — Deudor</li>
             <li>Carlos — Inversor</li>
-            <li>Marta — Ahorrativo</li>
           </ul>
         </div>
       </form>
